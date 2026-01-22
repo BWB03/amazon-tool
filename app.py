@@ -24,6 +24,51 @@ col_var_attr = st.sidebar.text_input("Variation Attribute (in Plan)", value="Siz
 val_theme = st.sidebar.text_input("Theme Name (e.g. SizeName)", value="SizeName")
 
 # --- FILE UPLOADER SECTION ---
+# --- TEMPLATE GENERATOR ---
+def generate_template():
+    # Create a dummy dataframe that matches your script's expectations
+    # Row 1: Headers
+    # Row 2: Parent SKU example (The script grabs Row 2 as the Parent)
+    # Row 3+: Child SKUs (The script reads these as children)
+    
+    data = {
+        'SKU': ['NEW-PARENT-SKU', 'EXISTING-CHILD-SKU-1', 'EXISTING-CHILD-SKU-2'],
+        'Size': ['', 'Small', 'Medium'],  # Example Variation Column
+        'Color': ['', 'Red', 'Blue'],     # Example Variation Column
+        'Price': ['', '19.99', '19.99'],  # Optional helpful columns
+        'Quantity': ['', '10', '15']      
+    }
+    df_template = pd.DataFrame(data)
+    
+    # Write to Excel memory buffer
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+        df_template.to_excel(writer, index=False)
+        
+        # Optional: Add a little note in the Excel file
+        workbook = writer.book
+        worksheet = writer.sheets['Sheet1']
+        # Add a comment or format to help them
+        format_yellow = workbook.add_format({'bg_color': '#FFFF00'})
+        worksheet.write('A2', 'NEW-PARENT-SKU', format_yellow) # Highlight Parent row
+        
+    return buffer.getvalue()
+
+# --- DISPLAY DOWNLOAD BUTTON ---
+st.markdown("### 1. Need a Plan?")
+st.write("Download this template to see exactly how to format your Planning File.")
+
+template_data = generate_template()
+
+st.download_button(
+    label="📄 Download Plan Template (.xlsx)",
+    data=template_data,
+    file_name="Plan_Template.xlsx",
+    mime="application/vnd.ms-excel",
+    help="Click to download a sample file with the correct headers."
+)
+
+st.markdown("---") # Visual divider line
 col1, col2 = st.columns(2)
 with col1:
     master_file = st.file_uploader("📂 Upload Master CLR (.xlsx)", type=['xlsx'])
